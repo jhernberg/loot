@@ -36,7 +36,7 @@
                                     root.loot.handlePromiseError,
                                     root.loot.translateStaticText,
                                     root.loot.Plugin,
-                                    root.loot.query,
+                                    root.loot.Query,
                                     root.loot.Translator);
   }
 }(this, (Dialog,
@@ -46,7 +46,7 @@
          handlePromiseError,
          translateStaticText,
          Plugin,
-         query,
+         Query,
          Translator) => {
   function setupEventHandlers() {
     /* Set up handlers for filters. */
@@ -126,18 +126,18 @@
   }
 
   function setVersion(appData) {
-    return query('getVersion').then(JSON.parse).then(splitVersion).then((version) => {
+    return Query.send('getVersion').then(JSON.parse).then(splitVersion).then((version) => {
       appData.version = version.release;
       dom.setVersion(version);
     });
   }
 
   function setLanguages() {
-    return query('getLanguages').then(JSON.parse).then(dom.fillLanguagesList);
+    return Query.send('getLanguages').then(JSON.parse).then(dom.fillLanguagesList);
   }
 
   function getInitErrors() {
-    return query('getInitErrors').then((result) => {
+    return Query.send('getInitErrors').then((result) => {
       if (JSON.parse(result)) {
         throw new Error(result);
       }
@@ -151,18 +151,18 @@
   }
 
   function setGameTypes() {
-    return query('getGameTypes').then(JSON.parse).then(dom.fillGameTypesList);
+    return Query.send('getGameTypes').then(JSON.parse).then(dom.fillGameTypesList);
   }
 
   function setInstalledGames(appData) {
-    return query('getInstalledGames').then(JSON.parse).then((installedGames) => {
+    return Query.send('getInstalledGames').then(JSON.parse).then((installedGames) => {
       appData.installedGames = installedGames;
       dom.updateEnabledGames(installedGames);
     });
   }
 
   function setSettings(appData) {
-    return query('getSettings').then(JSON.parse).then((result) => {
+    return Query.send('getSettings').then(JSON.parse).then((result) => {
       appData.settings = result;
       dom.updateSettingsDialog(appData.settings);
       dom.setGameMenuItems(appData.settings.games);
@@ -172,7 +172,7 @@
   }
 
   function setGameData(appData) {
-    return query('getGameData').then((result) => {
+    return Query.send('getGameData').then((result) => {
       const game = JSON.parse(result, Plugin.fromJson);
       appData.game = new Game(game, appData.l10n);
 

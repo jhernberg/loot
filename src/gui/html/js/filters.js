@@ -6,10 +6,10 @@
   } else {
     // Browser globals
     root.loot = root.loot || {};
-    root.loot.Filters = factory(root.loot.query,
+    root.loot.Filters = factory(root.loot.Query,
                                 root.loot.handlePromiseError);
   }
-}(this, (query, handlePromiseError) => class {
+}(this, (Query, handlePromiseError) => class {
   constructor(l10n) {
     /* Plugin filters */
     this.hideMessagelessPlugins = false;
@@ -87,7 +87,7 @@
        conflicts. */
     this.conflictingPluginNames = [targetPluginName];
 
-    return query('getConflictingPlugins', targetPluginName).then(JSON.parse).then((plugins) => {
+    return Query.send('getConflictingPlugins', targetPluginName).then(JSON.parse).then((plugins) => {
       plugins.forEach((plugin) => {
         if (plugin.conflicts) {
           this.conflictingPluginNames.push(plugin.name);

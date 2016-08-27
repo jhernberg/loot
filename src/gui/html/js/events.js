@@ -1,7 +1,7 @@
 'use strict';
 function onSidebarFilterToggle(evt) {
   loot.filters[evt.target.id] = evt.target.checked;
-  loot.query('saveFilterState', evt.target.id, evt.target.checked).catch(loot.handlePromiseError);
+  loot.Query.send('saveFilterState', evt.target.id, evt.target.checked).catch(loot.handlePromiseError);
   loot.filters.apply(loot.game.plugins);
 }
 function onContentFilter(evt) {
@@ -41,7 +41,7 @@ function onChangeGame(evt) {
     return;
   }
   /* Send off a CEF query with the folder name of the new game. */
-  loot.query('changeGame', evt.detail.item.getAttribute('value')).then((result) => {
+  loot.Query.send('changeGame', evt.detail.item.getAttribute('value')).then((result) => {
     /* Filters should be re-applied on game change, except the conflicts
        filter. Don't need to deactivate the others beforehand. Strictly not
        deactivating the conflicts filter either, just resetting it's value.
@@ -74,7 +74,8 @@ function onChangeGame(evt) {
 /* Masterlist update process, minus progress dialog. */
 function updateMasterlist() {
   loot.Dialog.showProgress('Updating and parsing masterlist...');
-  return loot.query('updateMasterlist').then(JSON.parse).then((result) => {
+
+  return loot.Query.send('updateMasterlist').then(JSON.parse).then((result) => {
     if (result) {
       /* Update JS variables. */
       loot.game.masterlist = result.masterlist;
@@ -112,7 +113,7 @@ function onSortPlugins() {
   if (loot.settings.updateMasterlist) {
     promise = promise.then(updateMasterlist);
   }
-  promise.then(() => loot.query('sortPlugins')).then(JSON.parse).then((result) => {
+  promise.then(() => loot.Query.send('sortPlugins')).then(JSON.parse).then((result) => {
     if (!result) {
       return;
     }
@@ -141,7 +142,7 @@ function onSortPlugins() {
       });
       /* Send discardUnappliedChanges query. Not doing so prevents LOOT's window
          from closing. */
-      loot.query('discardUnappliedChanges');
+      loot.Query.send('discardUnappliedChanges');
       loot.Dialog.closeProgress();
       loot.Dialog.showNotification(loot.l10n.translate('Sorting made no changes to the load order.'));
       return;
@@ -158,14 +159,14 @@ function onSortPlugins() {
 }
 function onApplySort() {
   const loadOrder = loot.game.getPluginNames();
-  return loot.query('applySort', loadOrder).then(() => {
+  return loot.Query.send('applySort', loadOrder).then(() => {
     loot.game.applySort();
 
     loot.state.exitSortingState();
   }).catch(loot.handlePromiseError);
 }
 function onCancelSort() {
-  return loot.query('cancelSort').then(JSON.parse).then((globalMessages) => {
+  return loot.Query.send('cancelSort').then(JSON.parse).then((globalMessages) => {
     loot.game.cancelSort(globalMessages);
     /* Sort UI elements again according to stored old load order. */
     loot.filters.apply(loot.game.plugins);
@@ -177,7 +178,7 @@ function onCancelSort() {
 function onRedatePlugins(evt) {
   loot.Dialog.askQuestion(loot.l10n.translate('Redate Plugins?'), loot.l10n.translate('This feature is provided so that modders using the Creation Kit may set the load order it uses. A side-effect is that any subscribed Steam Workshop mods will be re-downloaded by Steam. Do you wish to continue?'), loot.l10n.translate('Redate'), (result) => {
     if (result) {
-      loot.query('redatePlugins').then(() => {
+      loot.Query.send('redatePlugins').then(() => {
         loot.Dialog.showNotification('Plugins were successfully redated.');
       }).catch(loot.handlePromiseError);
     }
@@ -188,7 +189,7 @@ function onClearAllMetadata() {
     if (!result) {
       return;
     }
-    loot.query('clearAllMetadata').then(JSON.parse).then((plugins) => {
+    loot.Query.send('clearAllMetadata').then(JSON.parse).then((plugins) => {
       if (!plugins) {
         return;
       }
@@ -217,7 +218,7 @@ function onCopyContent() {
     }
   }
 
-  loot.query('copyContent', content).then(() => {
+  loot.Query.send('copyContent', content).then(() => {
     loot.Dialog.showNotification(loot.l10n.translate("LOOT's content has been copied to the clipboard."));
   }).catch(loot.handlePromiseError);
 }
@@ -228,13 +229,13 @@ function onCopyLoadOrder() {
     plugins = loot.game.getPluginNames();
   }
 
-  loot.query('copyLoadOrder', plugins).then(() => {
+  loot.Query.send('copyLoadOrder', plugins).then(() => {
     loot.Dialog.showNotification(loot.l10n.translate('The load order has been copied to the clipboard.'));
   }).catch(loot.handlePromiseError);
 }
 function onContentRefresh() {
   /* Send a query for updated load order and plugin header info. */
-  loot.query('getGameData').then((result) => {
+  loot.Query.send('getGameData').then((result) => {
     /* Parse the data sent from C++. */
     const game = JSON.parse(result, loot.Plugin.fromJson);
     loot.game = new loot.Game(game, loot.l10n);
@@ -254,10 +255,10 @@ function onContentRefresh() {
 }
 
 function onOpenReadme() {
-  loot.query('openReadme').catch(loot.handlePromiseError);
+  loot.Query.send('openReadme').catch(loot.handlePromiseError);
 }
 function onOpenLogLocation() {
-  loot.query('openLogLocation').catch(loot.handlePromiseError);
+  loot.Query.send('openLogLocation').catch(loot.handlePromiseError);
 }
 function handleUnappliedChangesClose(change) {
   loot.Dialog.askQuestion('', loot.l10n.translate('You have not yet applied or cancelled your %s. Are you sure you want to quit?', change), loot.l10n.translate('Quit'), (result) => {
@@ -265,7 +266,7 @@ function handleUnappliedChangesClose(change) {
       return;
     }
     /* Discard any unapplied changes. */
-    loot.query('discardUnappliedChanges').then(() => {
+    loot.Query.send('discardUnappliedChanges').then(() => {
       window.close();
     }).catch(loot.handlePromiseError);
   });
@@ -308,7 +309,7 @@ function onCloseSettingsDialog(evt) {
   };
 
   /* Send the settings back to the C++ side. */
-  loot.query('closeSettings', settings).then(JSON.parse).then((installedGames) => {
+  loot.Query.send('closeSettings', settings).then(JSON.parse).then((installedGames) => {
     loot.installedGames = installedGames;
     loot.DOM.updateEnabledGames(installedGames);
   }).catch(loot.handlePromiseError).then(() => {
@@ -339,7 +340,7 @@ function onEditorOpen(evt) {
 
   loot.state.enterEditingState();
 
-  return loot.query('editorOpened').catch(loot.handlePromiseError);
+  return loot.Query.send('editorOpened').catch(loot.handlePromiseError);
 }
 function onEditorClose(evt) {
   const plugin = loot.game.plugins.find((item) => (
@@ -355,7 +356,7 @@ function onEditorClose(evt) {
        changed, and update any UI elements necessary. Offload the
        majority of the work to the C++ side of things. */
     const edits = evt.target.readFromEditor(plugin);
-    promise = loot.query('editorClosed', edits).then(JSON.parse).then((result) => {
+    promise = loot.Query.send('editorClosed', edits).then(JSON.parse).then((result) => {
       if (result) {
         plugin.update(result);
 
@@ -369,7 +370,7 @@ function onEditorClose(evt) {
   } else {
     /* Don't need to record changes, but still need to notify C++ side that
        the editor has been closed. */
-    promise = loot.query('editorClosed', 'null');
+    promise = loot.Query.send('editorClosed', 'null');
   }
   promise.catch(loot.handlePromiseError).then(() => {
     /* Remove body attribute so that sidebar items are styled correctly. */
@@ -387,7 +388,7 @@ function onEditorClose(evt) {
   }).catch(loot.handlePromiseError);
 }
 function onCopyMetadata(evt) {
-  loot.query('copyMetadata', evt.target.getName()).then(() => {
+  loot.Query.send('copyMetadata', evt.target.getName()).then(() => {
     loot.Dialog.showNotification(loot.l10n.translate('The metadata for "%s" has been copied to the clipboard.', evt.target.getName()));
   }).catch(loot.handlePromiseError);
 }
@@ -396,7 +397,7 @@ function onClearMetadata(evt) {
     if (!result) {
       return;
     }
-    loot.query('clearPluginMetadata', evt.target.getName()).then(JSON.parse).then((plugin) => {
+    loot.Query.send('clearPluginMetadata', evt.target.getName()).then(JSON.parse).then((plugin) => {
       if (!result) {
         return;
       }

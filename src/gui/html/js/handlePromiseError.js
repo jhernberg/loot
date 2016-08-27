@@ -9,6 +9,11 @@
     root.loot.handlePromiseError = factory(root.loot);
   }
 }(this, (loot) => (error) => {
+  if (!error) {
+    loot.Dialog.closeProgress();
+    return;
+  }
+
   /* Error.stack seems to be Chromium-specific. */
   console.log(error.stack);  // eslint-disable-line no-console
   loot.Dialog.closeProgress();

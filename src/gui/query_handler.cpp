@@ -124,6 +124,13 @@ bool QueryHandler::OnQuery(CefRefPtr<CefBrowser> browser,
   return true;
 }
 
+void QueryHandler::OnQueryCanceled(CefRefPtr<CefBrowser> browser,
+                                 CefRefPtr<CefFrame> frame,
+                                 int64 query_id) {
+BOOST_LOG_TRIVIAL(info) << "Received query cancellation request for query ID " << query_id;
+cancelledQueryIds.insert(query_id);
+}
+
 CefRefPtr<Query> QueryHandler::createQuery(CefRefPtr<CefBrowser> browser,
                                            CefRefPtr<CefFrame> frame,
                                            const YAML::Node& request) {
@@ -185,5 +192,9 @@ CefRefPtr<Query> QueryHandler::createQuery(CefRefPtr<CefBrowser> browser,
     return new UpdateMasterlistQuery(lootState_);
 
   return nullptr;
+}
+
+bool QueryHandler::IsCancelled(int64 queryId) const {
+  return cancelledQueryIds.count(queryId) == 1;
 }
 }

@@ -46,12 +46,19 @@ public:
                        const CefString& request,
                        bool persistent,
                        CefRefPtr<Callback> callback) OVERRIDE;
+
+  virtual void OnQueryCanceled(CefRefPtr<CefBrowser> browser,
+                               CefRefPtr<CefFrame> frame,
+                               int64 query_id) OVERRIDE;
 private:
   CefRefPtr<Query> createQuery(CefRefPtr<CefBrowser> browser,
                                CefRefPtr<CefFrame> frame,
                                const YAML::Node& request);
 
+  bool IsCancelled(int64 queryId) const;
+
   LootState& lootState_;
+  std::unordered_set<int64> cancelledQueryIds;
 };
 }
 
